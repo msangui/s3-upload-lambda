@@ -11,30 +11,26 @@ const uploadFile = (Body, Key, Bucket) => {
   return S3.upload(data).promise();
 };
 
-exports.handler = async (event) => {
-  let responseStatusCode = 200;
-  let responseMessage = 'success';
+const respond = (statusCode, message) => ({
+  statusCode,
+  body: JSON.stringify({message}),
+});
 
+exports.handler = async (event) => {
   let result;
 
   try {
     result = await parser(event);
   } catch (e) {
-    responseStatusCode = 500;
-    responseMessage = e.message;
+    return respond(500, e.message);
   }
 
   try {
     await uploadFile(result.file, result.filename, process.env.BUCKET_NAME);
   } catch (e) {
-    responseStatusCode = 500;
-    responseMessage = e.message;
+    return respond(500, e.message);
   }
 
-  return {
-    statusCode: responseStatusCode,
-    body: JSON.stringify({
-      message: responseMessage,
-    }),
-  };
+
+  return respond(200, 'success');
 };
